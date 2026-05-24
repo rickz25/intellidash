@@ -268,12 +268,6 @@ Contributions are welcome.
 
 ---
 
-# License
-
-This project is licensed under the MIT License.
-
----
-
 # Author
 
 Developed by Ricky Morales.
@@ -285,5 +279,5 @@ Developed by Ricky Morales.
 Replace this with your actual repository URL:
 
 ```txt
-https://github.com/rickz25/intellidash-ai-erp
+https://github.com/rickz25/IntelliDash
 ```

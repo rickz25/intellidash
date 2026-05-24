@@ -1,0 +1,136 @@
+import { ReactNode, useMemo } from 'react';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useCrudTable } from '@/hooks/useCrudTable';
+
+type CrudRecord = Record<string, any>;
+
+interface ColumnConfig {
+    key: string;
+    label: string;
+    render?: (item: CrudRecord) => ReactNode;
+}
+
+interface DataTablePageProps {
+    title: string;
+    subtitle: string;
+    endpoint: string;
+    searchKeys: string[];
+    columns: any[];
+    paginated?: boolean;
+    perPage?: number;
+}
+export default function DataTablePage({
+    title,
+    subtitle,
+    endpoint,
+    searchKeys,
+    columns,
+    paginated = true,
+    perPage = 10,
+}: DataTablePageProps) {
+    const {
+        items,
+        loading,
+        search,
+        setSearch,
+        page,
+        setPage,
+        pagination,
+    } = useCrudTable(endpoint, paginated, perPage);
+
+    const filtered = useMemo(() => {
+        const term = search.toLowerCase();
+        if (!term) return items;
+
+        return items.filter((item) =>
+            searchKeys.some((key) =>
+                String(item[key] ?? '').toLowerCase().includes(term)
+            )
+        );
+    }, [items, search]);
+
+    return (
+        <div className="flex flex-col gap-6 p-6">
+            <div>
+                <h1 className="text-2xl font-semibold">{title}</h1>
+                <p className="text-sm text-muted-foreground">{subtitle}</p>
+            </div>
+
+            <div className="flex justify-end">
+                <div className="relative w-full sm:w-80">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <Input
+                        className="pl-9"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search..."
+                    />
+                </div>
+            </div>
+
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        {columns.map((c) => (
+                            <TableHead key={c.key}>{c.label}</TableHead>
+                        ))}
+                    </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={columns.length}>
+                                Loading...
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        filtered.map((item, i) => (
+                            <TableRow key={i}>
+                                {columns.map((c) => (
+                                    <TableCell key={c.key}>
+                                        {c.render
+                                            ? c.render(item)
+                                            : String(item[c.key] ?? '')}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
+
+            {paginated && pagination && (
+                <div className="flex items-center justify-between border-t pt-3">
+                    <p className="text-xs text-muted-foreground">
+                        Page {pagination.current_page} of {pagination.last_page}
+                    </p>
+
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page <= 1}
+                            onClick={() => setPage(page - 1)}
+                        >
+                            Previous
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page >= pagination.last_page}
+                            onClick={() => setPage(page + 1)}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

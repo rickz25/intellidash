@@ -10,6 +10,7 @@ import {
     BarChart3,
     ShoppingCart,
     AlertTriangle,
+    PieChart,
 } from 'lucide-react';
 
 import {
@@ -19,6 +20,7 @@ import {
     PointElement,
     LineElement,
     BarElement,
+    ArcElement,
     Title,
     Tooltip,
     Legend,
@@ -32,6 +34,7 @@ ChartJS.register(
     PointElement,
     LineElement,
     BarElement,
+    ArcElement,
     Title,
     Tooltip,
     Legend,
@@ -44,6 +47,7 @@ import { Line } from 'react-chartjs-2';
 import axios from 'axios';
 
 import KpiCard from '@/components/KpiCard';
+import ChartCard from '@/components/ChartCard';
 
 
 /*
@@ -246,6 +250,15 @@ export default function Dashboard() {
             console.error('AI Dashboard failed:', err);
 
         }
+    };
+
+    const chartIcons: Record<string, ReactNode> = {
+        sales_trend: <TrendingUp className="h-5 w-5 text-cyan-400" />,
+        revenue_by_branch: <BarChart3 className="h-5 w-5 text-green-400" />,
+        top_products: <BarChart3 className="h-5 w-5 text-indigo-400" />,
+        low_stock_products: <BarChart3 className="h-5 w-5 text-red-400" />,
+        payment_methods: <PieChart className="h-5 w-5 text-yellow-400" />,
+        sales_by_category: <PieChart className="h-5 w-5 text-purple-400" />,
     };
 
     /*
@@ -824,7 +837,7 @@ export default function Dashboard() {
                     </div>
                 </div> */}
 
-                <div className="grid gap-4 xl:grid-cols-2">
+                {/* <div className="grid gap-4 xl:grid-cols-2">
                     {charts &&
                         Object.entries(charts).map(([key, chart]) => (
                             <div key={key} className="rounded-xl border bg-white/5 p-4">
@@ -847,6 +860,17 @@ export default function Dashboard() {
                                     />
                                 </div>
                             </div>
+                        ))}
+                </div> */}
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                    {charts &&
+                        Object.entries(charts).map(([key, chart]) => (
+                            <ChartCard
+                                key={key}
+                                chart={chart}
+                                icon={chartIcons[key] ?? null}
+                            />
                         ))}
                 </div>
             </div>

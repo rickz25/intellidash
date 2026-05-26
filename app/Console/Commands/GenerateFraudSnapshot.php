@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Console\Commands;
-use App\Services\FraudService;
 
+use App\Services\FraudService;
 use Illuminate\Console\Command;
 
 class GenerateFraudSnapshot extends Command

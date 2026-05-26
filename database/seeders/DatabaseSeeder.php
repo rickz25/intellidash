@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RoleSeeder;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. Create test user with role assigned
-        $adminRole = \App\Models\Role::where('name', 'Admin')->first();
+        $adminRole = Role::where('name', 'Admin')->first();
 
         User::factory()->create([
             'name' => 'Test Admin',

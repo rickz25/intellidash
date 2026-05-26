@@ -39,10 +39,10 @@ class FraudLogController extends Controller
         }
 
         return response()->json(
-                $query
-                    ->latest()
-                    ->paginate($perPage)
-                    ->withQueryString()
-            );
+            $query
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString()
+        );
     }
 }

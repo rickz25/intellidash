@@ -45,7 +45,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'device_name' => 'nullable|string'
+            'device_name' => 'nullable|string',
         ]);
 
         $user = $this->authService->validateCredentials(
@@ -53,9 +53,9 @@ class AuthController extends Controller
             $request->password
         );
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'message' => 'Invalid credentials'
+                'message' => 'Invalid credentials',
             ], 401);
         }
 
@@ -72,7 +72,7 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'token' => $token,
             'user' => $user->load('role', 'branch'),
-            'permissions' => $user->permissions
+            'permissions' => $user->permissions,
         ]);
     }
 
@@ -91,7 +91,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out from current device'
+            'message' => 'Logged out from current device',
         ]);
     }
 
@@ -101,28 +101,28 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Logged out from all devices'
+            'message' => 'Logged out from all devices',
         ]);
     }
 
     public function refresh(Request $request)
     {
         $request->validate([
-            'refresh_token' => 'required'
+            'refresh_token' => 'required',
         ]);
 
         $token = RefreshToken::where('token', $request->refresh_token)
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$token) {
+        if (! $token) {
             return response()->json(['message' => 'Invalid refresh token'], 401);
         }
 
         $user = $token->user;
 
         return response()->json([
-            'token' => $user->createToken('access')->plainTextToken
+            'token' => $user->createToken('access')->plainTextToken,
         ]);
     }
 }

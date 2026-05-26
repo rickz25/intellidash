@@ -40,7 +40,7 @@ return new class extends Migration
                 'avatar',
                 'last_device_name',
                 'last_ip',
-                'last_login_at'
+                'last_login_at',
             ]);
         });
     }

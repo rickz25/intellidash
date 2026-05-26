@@ -47,9 +47,9 @@ class DashboardV2Controller extends Controller
         */
 
         $dailySales = Sale::select(
-                DB::raw('DATE(transaction_date) as date'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            DB::raw('DATE(transaction_date) as date'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->where('status', 'completed')
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(transaction_date)'))
@@ -77,10 +77,10 @@ class DashboardV2Controller extends Controller
         */
 
         $topProducts = SaleItem::select(
-                'product_id',
-                DB::raw('SUM(quantity) as total_qty'),
-                DB::raw('SUM(total) as revenue')
-            )
+            'product_id',
+            DB::raw('SUM(quantity) as total_qty'),
+            DB::raw('SUM(total) as revenue')
+        )
             ->with('product')
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
@@ -94,10 +94,10 @@ class DashboardV2Controller extends Controller
         */
 
         $categoryPerformance = Category::select(
-                'categories.id',
-                'categories.name',
-                DB::raw('SUM(sale_items.total) as revenue')
-            )
+            'categories.id',
+            'categories.name',
+            DB::raw('SUM(sale_items.total) as revenue')
+        )
             ->join('products', 'products.category_id', '=', 'categories.id')
             ->join('sale_items', 'sale_items.product_id', '=', 'products.id')
             ->groupBy('categories.id', 'categories.name')
@@ -111,11 +111,11 @@ class DashboardV2Controller extends Controller
         */
 
         $branchPerformance = Branch::select(
-                'branches.id',
-                'branches.name',
-                DB::raw('SUM(sales.total_amount) as revenue'),
-                DB::raw('COUNT(sales.id) as orders')
-            )
+            'branches.id',
+            'branches.name',
+            DB::raw('SUM(sales.total_amount) as revenue'),
+            DB::raw('COUNT(sales.id) as orders')
+        )
             ->join('sales', 'sales.branch_id', '=', 'branches.id')
             ->where('sales.status', 'completed')
             ->groupBy('branches.id', 'branches.name')
@@ -128,12 +128,12 @@ class DashboardV2Controller extends Controller
         |--------------------------------------------------------------------------
         */
         $criticalProduct = Product::whereColumn('stock_quantity', '<=', 'reorder_level')
-        ->orderBy('stock_quantity')
-        ->first();
+            ->orderBy('stock_quantity')
+            ->first();
 
         $highRiskProducts = Product::whereColumn('stock_quantity', '<=', 'reorder_level')
-        ->orderBy('stock_quantity')
-        ->get();
+            ->orderBy('stock_quantity')
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -182,31 +182,31 @@ class DashboardV2Controller extends Controller
 }
 
 // Response format example:
-    /*
-    {
+/*
+{
   "sales_kpis": {
-    "total_sales": 250000,
-    "net_revenue": 245000,
-    "total_orders": 320,
-    "average_order_value": 781.25
+"total_sales": 250000,
+"net_revenue": 245000,
+"total_orders": 320,
+"average_order_value": 781.25
   },
 
   "inventory_kpis": {
-    "total_products": 120,
-    "low_stock": 15,
-    "out_of_stock": 3,
-    "inventory_value": 980000
+"total_products": 120,
+"low_stock": 15,
+"out_of_stock": 3,
+"inventory_value": 980000
   },
 
   "trends": {
-    "daily_sales": [
-      { "date": "2026-05-01", "total": 12000 },
-      { "date": "2026-05-02", "total": 15000 }
-    ]
+"daily_sales": [
+  { "date": "2026-05-01", "total": 12000 },
+  { "date": "2026-05-02", "total": 15000 }
+]
   },
 
   "top_products": [],
   "category_performance": [],
   "branch_performance": []
 }
-    */
+*/

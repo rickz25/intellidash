@@ -8,11 +8,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use Illuminate\Support\Facades\DB;
 use App\Services\FraudService;
-use App\Services\SalesInsightService;
-use App\Services\DashboardService;  
 use App\Services\PredictiveService;
+use App\Services\SalesInsightService;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -33,10 +32,10 @@ class DashboardController extends Controller
 
         // LOW STOCK PRODUCTS
         $lowStockProducts = Product::whereColumn(
-                'stock_quantity',
-                '<=',
-                'reorder_level'
-            )
+            'stock_quantity',
+            '<=',
+            'reorder_level'
+        )
             ->select(
                 'id',
                 'name',
@@ -47,9 +46,9 @@ class DashboardController extends Controller
 
         // MONTHLY SALES
         $monthlySales = Sale::select(
-                DB::raw('MONTH(transaction_date) as month'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            DB::raw('MONTH(transaction_date) as month'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->where('status', 'completed')
             ->groupBy(DB::raw('MONTH(transaction_date)'))
             ->orderBy('month')
@@ -63,9 +62,9 @@ class DashboardController extends Controller
 
         // TOP SELLING PRODUCTS
         $topProducts = SaleItem::select(
-                'product_id',
-                DB::raw('SUM(quantity) as total_qty')
-            )
+            'product_id',
+            DB::raw('SUM(quantity) as total_qty')
+        )
             ->with('product')
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
@@ -162,5 +161,4 @@ class DashboardController extends Controller
             ],
         ]);
     }
-    
 }

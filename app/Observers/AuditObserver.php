@@ -61,7 +61,7 @@ class AuditObserver
         ];
 
         dispatch(function () use ($data) {
-            \App\Models\AuditLog::create($data);
+            AuditLog::create($data);
         });
     }
 }

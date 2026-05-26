@@ -81,6 +81,7 @@ class ChartService
                 'backgroundColor' => '#10b981',
             ]]
         );
+
         return $chart->toArray();
     }
 
@@ -105,6 +106,7 @@ class ChartService
                 'backgroundColor' => '#6366f1',
             ]]
         );
+
         return $chart->toArray();
     }
 
@@ -129,6 +131,7 @@ class ChartService
                 'backgroundColor' => '#ef4444',
             ]]
         );
+
         return $chart->toArray();
     }
 
@@ -158,6 +161,7 @@ class ChartService
                 'fill' => true,
             ]]
         );
+
         return $chart->toArray();
     }
 
@@ -186,6 +190,7 @@ class ChartService
                 ],
             ]]
         );
+
         return $chart->toArray();
     }
 
@@ -248,6 +253,7 @@ class ChartService
                 ],
             ]]
         );
+
         return $chart->toArray();
     }
 }

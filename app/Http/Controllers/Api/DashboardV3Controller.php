@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 class DashboardV3Controller extends Controller
@@ -76,10 +76,10 @@ class DashboardV3Controller extends Controller
         */
 
         $customerBehavior = Sale::select(
-                'customer_name',
-                DB::raw('COUNT(*) as visits'),
-                DB::raw('SUM(total_amount) as spent')
-            )
+            'customer_name',
+            DB::raw('COUNT(*) as visits'),
+            DB::raw('SUM(total_amount) as spent')
+        )
             ->groupBy('customer_name')
             ->orderByDesc('spent')
             ->limit(10)
@@ -92,9 +92,9 @@ class DashboardV3Controller extends Controller
         */
 
         $monthlyTrend = Sale::select(
-                DB::raw('MONTH(transaction_date) as month'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            DB::raw('MONTH(transaction_date) as month'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->whereYear('transaction_date', $thisYear)
             ->groupBy(DB::raw('MONTH(transaction_date)'))
             ->orderBy('month')

@@ -11,11 +11,11 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (!$user || !$user->role) {
+        if (! $user || ! $user->role) {
             abort(403, 'Unauthorized');
         }
 
-        if (!in_array($user->role->name, $roles)) {
+        if (! in_array($user->role->name, $roles)) {
             abort(403, 'Forbidden (Role not allowed)');
         }
 

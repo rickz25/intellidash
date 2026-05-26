@@ -11,17 +11,17 @@ class PermissionMiddleware
     {
         $user = $request->user();
 
-        if (!$user || !$user->role) {
+        if (! $user || ! $user->role) {
             abort(403, 'Unauthorized');
         }
 
         $permissions = $user->role->permissions ?? [];
 
-        if (!is_array($permissions)) {
+        if (! is_array($permissions)) {
             $permissions = [];
         }
 
-        if (!in_array('*', $permissions, true) && !in_array($permission, $permissions, true)) {
+        if (! in_array('*', $permissions, true) && ! in_array($permission, $permissions, true)) {
             abort(403, 'Forbidden (Permission denied)');
         }
 

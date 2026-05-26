@@ -69,7 +69,7 @@ class Sale extends Model
                     'product_id' => $item['product_id'],
                     'quantity' => $item['qty'],
                     'unit_price' => $item['price'],
-                    'total' => $item['qty'] * $item['price']
+                    'total' => $item['qty'] * $item['price'],
                 ]);
 
                 // 3. Stock update (safe atomic operation)

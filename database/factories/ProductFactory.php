@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Branch;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,8 +20,8 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'branch_id' => \App\Models\Branch::inRandomOrder()->value('id'),
-            'category_id' => \App\Models\Category::inRandomOrder()->value('id'),
+            'branch_id' => Branch::inRandomOrder()->value('id'),
+            'category_id' => Category::inRandomOrder()->value('id'),
 
             'sku' => fake()->unique()->bothify('SKU-###'),
             'barcode' => fake()->ean13(),

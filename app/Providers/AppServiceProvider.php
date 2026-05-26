@@ -2,15 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Models\User;
-use App\Models\Product;
-use App\Models\UploadedReport;
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\UploadedReport;
+use App\Models\User;
 use App\Observers\AuditObserver;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

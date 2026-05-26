@@ -16,6 +16,7 @@ class BranchController extends Controller
             ->withCount(['users', 'products', 'sales'])
             ->latest()
             ->get();
+
         return response()->json($branches);
     }
 
@@ -83,4 +84,3 @@ class BranchController extends Controller
         ]);
     }
 }
-

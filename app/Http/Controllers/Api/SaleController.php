@@ -10,30 +10,6 @@ use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
-    // public function index(Request $request): JsonResponse
-    // {
-    //     if ($request->boolean('lookup')) {
-    //         return response()->json(
-    //             Sale::query()
-    //                 ->select(['id', 'invoice_no', 'transaction_date'])
-    //                 ->latest()
-    //                 ->limit(500)
-    //                 ->get()
-    //         );
-    //     }
-
-    //     $limit = min((int) $request->integer('limit', 300), 1000);
-
-    //     return response()->json(
-    //         Sale::query()
-    //             ->with(['branch:id,name', 'user:id,name'])
-    //             ->withCount('items')
-    //             ->latest()
-    //             ->limit($limit)
-    //             ->get()
-    //     );
-    // }
-
     public function index(Request $request): JsonResponse
     {
         $perPage = min((int) $request->integer('per_page', 10), 100);
@@ -47,6 +23,7 @@ class SaleController extends Controller
                 ->paginate($perPage)
         );
     }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate($this->rules());

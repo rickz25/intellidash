@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Services;
-use App\Models\Sale;
-use App\Models\SaleItem;
-use Illuminate\Support\Facades\DB;
+
 use App\Models\FraudLog;
+use App\Models\Sale;
+use Illuminate\Support\Facades\DB;
 
 class FraudService
 {
@@ -19,7 +19,7 @@ class FraudService
                 cashier anomalies
                 inventory manipulation
         * HOW IT WORKS (FLOW)
-    
+
             Sales data → Analyze for anomalies
                     ↓
             Rule-based checks
@@ -95,9 +95,9 @@ class FraudService
         $highDiscountSales = Sale::where('discount', '>', 500)->count();
 
         $dailySales = Sale::select(
-                DB::raw('DATE(transaction_date) as date'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            DB::raw('DATE(transaction_date) as date'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->groupBy('date')
             ->get();
 
@@ -108,10 +108,10 @@ class FraudService
         );
 
         $cashierActivity = Sale::select(
-                'created_by',
-                DB::raw('COUNT(*) as total_sales'),
-                DB::raw('SUM(total_amount) as revenue')
-            )
+            'created_by',
+            DB::raw('COUNT(*) as total_sales'),
+            DB::raw('SUM(total_amount) as revenue')
+        )
             ->groupBy('created_by')
             ->get();
 

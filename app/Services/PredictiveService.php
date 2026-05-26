@@ -1,57 +1,29 @@
 <?php
 
 namespace App\Services;
-use App\Models\Sale;
-use App\Models\SaleItem;
+
 use App\Models\Product;
-use App\Models\Branch;
+use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 
 class PredictiveService
 {
-        /*
-        |--------------------------------------------------------------------------
-        | PREDICTIVE ANALYTICS ENGINE
-        |--------------------------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | PREDICTIVE ANALYTICS ENGINE
+    |--------------------------------------------------------------------------
      * CAPABILITIES
-        - Sales forecasting (next 7 days)
-        - Inventory depletion forecast
+    - Sales forecasting (next 7 days)
+    - Inventory depletion forecast
      * HOW IT WORKS (FLOW)
 
-        Sales & inventory data → Analyze patterns
-                ↓
-        Basic forecasting model (moving average + trend)
-                ↓
-        AI interpretation layer
-                ↓
-        Actionable insights output
-     */
-
-     /*
-     |--------------------------------------------------------------------------
-     | SALES FORECASTING
-     |--------------------------------------------------------------------------
-     */
-
-
-     /*     
-        🧠 4. COMBINED DASHBOARD RESPONSE
-
-        You can merge both:
-
-        {
-        "sales_forecast": {
-            "next_7_days": [12000, 12500, 13000],
-            "trend": "increasing"
-        },
-        "inventory_risk": [
-            {
-            "product": "Milk",
-            "days_left": 3,
-            "risk": "HIGH"
-            }
-        ]
-        }
+    Sales & inventory data → Analyze patterns
+            ↓
+    Basic forecasting model (moving average + trend)
+            ↓
+    AI interpretation layer
+            ↓
+    Actionable insights output
      */
     public function salesForecast()
     {
@@ -62,9 +34,9 @@ class PredictiveService
         */
 
         $dailySales = Sale::select(
-                DB::raw('DATE(transaction_date) as date'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            DB::raw('DATE(transaction_date) as date'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->where('transaction_date', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -134,7 +106,7 @@ class PredictiveService
                 return [
                     'product' => $p->name,
                     'status' => 'no_sales',
-                    'days_left' => null
+                    'days_left' => null,
                 ];
             }
 
@@ -145,12 +117,12 @@ class PredictiveService
                 'stock' => $p->stock_quantity,
                 'daily_sales_avg' => round($dailyAvg, 2),
                 'days_left' => round($daysLeft, 1),
-                'risk' => $daysLeft < 5 ? 'HIGH' : ($daysLeft < 10 ? 'MEDIUM' : 'LOW')
+                'risk' => $daysLeft < 5 ? 'HIGH' : ($daysLeft < 10 ? 'MEDIUM' : 'LOW'),
             ];
         });
 
         return response()->json([
-            'inventory_forecast' => $forecast
+            'inventory_forecast' => $forecast,
         ]);
     }
 
@@ -158,7 +130,9 @@ class PredictiveService
     {
         $count = count($data);
 
-        if ($count < 2) return 0;
+        if ($count < 2) {
+            return 0;
+        }
 
         $firstHalf = $data->take(intval($count / 2))->avg();
         $secondHalf = $data->skip(intval($count / 2))->avg();

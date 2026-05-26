@@ -1,4 +1,4 @@
-import logo from '@/assets/intellidash-logo.png';
+import logo from '@/assets/IntelliDash-logo.png';
 import type { ImgHTMLAttributes } from 'react';
 
 type ApplicationLogoProps = ImgHTMLAttributes<HTMLImageElement>;

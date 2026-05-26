@@ -320,11 +320,11 @@ export default function Dashboard() {
     const fraud = realtime?.fraud;
     const salesInsight = realtime?.sales_insight;
     const predictive = realtime?.predictive;
-    const inventory = realtime?.inventory_risk as any;
+    const inventory = realtime?.inventory_risk;
 
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<Record<string, unknown> | null>(null);
     const [openTrend, setOpenTrend] = useState(false);
     const [openRestockModal, setOpenRestockModal] = useState(false);
 

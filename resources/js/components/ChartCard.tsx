@@ -40,7 +40,7 @@ export interface ChartPayload {
 
 interface Props {
     chart: ChartPayload;
-    options?: ChartOptions<any>;
+    options?: ChartOptions<'line' | 'bar' | 'pie' | 'doughnut'>;
     icon?: ReactNode;
     footer?: ReactNode;
 }
@@ -51,7 +51,7 @@ interface Props {
 |--------------------------------------------------------------------------
 */
 
-const defaultOptions: ChartOptions<any> = {
+const defaultOptions: ChartOptions<'line' | 'bar' | 'pie' | 'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
 
@@ -117,23 +117,18 @@ export default function ChartCard({ chart, options, icon, footer }: Props) {
         })),
     };
 
-    const commonProps = {
-        data,
-        options: mergedOptions,
-    };
-
     const renderChart = () => {
         switch (chart.type) {
             case 'line':
-                return <Line {...commonProps} />;
+                return <Line data={data} options={mergedOptions as ChartOptions<'line'>} />;
             case 'bar':
-                return <Bar {...commonProps} />;
+                return <Bar data={data} options={mergedOptions as ChartOptions<'bar'>} />;
             case 'doughnut':
-                return <Doughnut {...commonProps} />;
+                return <Doughnut data={data} options={mergedOptions as ChartOptions<'doughnut'>} />;
             case 'pie':
-                return <Pie {...commonProps} />;
+                return <Pie data={data} options={mergedOptions as ChartOptions<'pie'>} />;
             default:
-                return <Line {...commonProps} />;
+                return <Line data={data} options={mergedOptions as ChartOptions<'line'>} />;
         }
     };
 

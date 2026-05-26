@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import axios from 'axios';
 
-type CrudRecord = Record<string, any>;
+type CrudRecord = Record<string, unknown>;
 
 export function useCrudTable(endpoint: string, paginated = false, perPage = 10) {
     const [items, setItems] = useState<CrudRecord[]>([]);
@@ -9,7 +9,7 @@ export function useCrudTable(endpoint: string, paginated = false, perPage = 10) 
 
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const [pagination, setPagination] = useState<any>(null);
+    const [pagination, setPagination] = useState<Record<string, unknown> | null>(null);
 
     // ✅ fetch data (NOW includes search)
     const loadItems = useCallback(

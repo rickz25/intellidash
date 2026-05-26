@@ -16,7 +16,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 type CrudValue = string | number | boolean | string[] | null;
-type CrudRecord = Record<string, any>;
+type CrudRecord = Record<string, unknown>;
 type FieldType = 'text' | 'email' | 'number' | 'textarea' | 'select' | 'boolean' | 'datetime-local' | 'permissions';
 
 interface FieldOption {
@@ -173,44 +173,44 @@ export default function CrudManagementPage({
     }, []);
 
     const displayedItems = useMemo(() => {
-    const term = search.trim().toLowerCase();
+        const term = search.trim().toLowerCase();
 
-    // 1. filter first
-    let data = items;
+        // 1. filter first
+        let data = items;
 
-    if (term) {
-        data = data.filter((item) =>
-            searchKeys
-                .map((key) => String(getNestedValue(item, key) ?? ''))
-                .join(' ')
-                .toLowerCase()
-                .includes(term),
-        );
-    }
+        if (term) {
+            data = data.filter((item) =>
+                searchKeys
+                    .map((key) => String(getNestedValue(item, key) ?? ''))
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(term),
+            );
+        }
 
-    // 2. sort next
-    if (sortKey) {
-        data = [...data].sort((a, b) => {
-            const aValue = getNestedValue(a, sortKey);
-            const bValue = getNestedValue(b, sortKey);
+        // 2. sort next
+        if (sortKey) {
+            data = [...data].sort((a, b) => {
+                const aValue = getNestedValue(a, sortKey);
+                const bValue = getNestedValue(b, sortKey);
 
-            if (aValue == null) return 1;
-            if (bValue == null) return -1;
+                if (aValue == null) return 1;
+                if (bValue == null) return -1;
 
-            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    return sortDirection === 'asc'
+                        ? aValue - bValue
+                        : bValue - aValue;
+                }
+
                 return sortDirection === 'asc'
-                    ? aValue - bValue
-                    : bValue - aValue;
-            }
+                    ? String(aValue).localeCompare(String(bValue))
+                    : String(bValue).localeCompare(String(aValue));
+            });
+        }
 
-            return sortDirection === 'asc'
-                ? String(aValue).localeCompare(String(bValue))
-                : String(bValue).localeCompare(String(aValue));
-        });
-    }
-
-    return data;
-}, [items, search, searchKeys, sortKey, sortDirection]);
+        return data;
+    }, [items, search, searchKeys, sortKey, sortDirection]);
 
     const resetForm = () => {
         setEditingItem(null);
@@ -223,7 +223,7 @@ export default function CrudManagementPage({
         const nextForm = { ...emptyForm };
 
         fields.forEach((field) => {
-            const value = item[field.name];
+            const value = item[field.name] as CrudValue;
             nextForm[field.name] = formatFormValue(field, value ?? emptyForm[field.name]);
         });
 
@@ -309,8 +309,8 @@ export default function CrudManagementPage({
                         <div>
                             <h2 className="text-sm font-semibold">Directory</h2>
                             <p className="text-xs text-muted-foreground">
-                                    {pagination ? `${pagination.from ?? 0}-${pagination.to ?? 0} of ${pagination.total} records` : `${displayedItems.length} of ${items.length} records shown`}
-                                </p>
+                                {pagination ? `${pagination.from ?? 0}-${pagination.to ?? 0} of ${pagination.total} records` : `${displayedItems.length} of ${items.length} records shown`}
+                            </p>
                         </div>
 
                         <div className="relative sm:w-80">

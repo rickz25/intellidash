@@ -5,8 +5,7 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCrudTable } from '@/hooks/useCrudTable';
 
-type CrudRecord = Record<string, any>;
-
+type CrudRecord = Record<string, unknown>;
 interface ColumnConfig {
     key: string;
     label: string;
@@ -18,7 +17,7 @@ interface DataTablePageProps {
     subtitle: string;
     endpoint: string;
     searchKeys: string[];
-    columns: any[];
+    columns: ColumnConfig[];
     paginated?: boolean;
     perPage?: number;
 }
@@ -40,17 +39,6 @@ export default function DataTablePage({
         setPage,
         pagination,
     } = useCrudTable(endpoint, paginated, perPage);
-
-    const filtered = useMemo(() => {
-        const term = search.toLowerCase();
-        if (!term) return items;
-
-        return items.filter((item) =>
-            searchKeys.some((key) =>
-                String(item[key] ?? '').toLowerCase().includes(term)
-            )
-        );
-    }, [items, search]);
 
     // Sorting state
     const [sortKey, setSortKey] = useState<string | null>(null);

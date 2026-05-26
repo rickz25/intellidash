@@ -54,11 +54,13 @@ export default function ProductsIndex() {
 
     const risk = params.get('risk');
     const product_name = params.get('product_name');
+    const stock = params.get('stock');
 
     const query = new URLSearchParams();
 
     if (risk) query.append('risk', risk);
     if (product_name) query.append('product_name', product_name);
+    if (stock) query.append('stock', stock);
 
     const endpoint = `/api/products?${query.toString()}`;
 

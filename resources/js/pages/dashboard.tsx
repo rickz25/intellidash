@@ -43,11 +43,14 @@ ChartJS.register(
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Line } from 'react-chartjs-2';
 import axios from 'axios';
 
 import KpiCard from '@/components/KpiCard';
 import ChartCard from '@/components/ChartCard';
+import { formatPHP } from '@/utils/format';
+import SalesInsightModal from '@/components/dashboard/SalesInsightModal';
+import SalesForecastModal from '@/components/dashboard/SalesForecastModal';
+import RestockRecommendationModal from '@/components/dashboard/RestockRecommendationModal';
 
 
 /*
@@ -96,6 +99,7 @@ interface DailySales {
 }
 
 interface RealtimeData {
+    low_stock_products: never[];
     revenue: number;
     sales: number;
     inventory: number;
@@ -124,16 +128,6 @@ interface ExecutiveData {
 
     monthly_trend?: MonthlyTrend[];
 }
-
-interface ChartDataset {
-    label: string;
-    data: number[];
-    borderColor?: string;
-    backgroundColor?: string;
-    fill?: boolean;
-    tension?: number;
-}
-
 interface ChartPayload {
     type: string;
     title: string;
@@ -148,11 +142,6 @@ interface ChartPayload {
         pointRadius?: number;
     }>;
 }
-
-// interface DashboardCharts {
-//     sales_trend?: ChartPayload;
-//     top_products?: ChartPayload;
-// }
 
 interface DashboardCharts {
     sales_trend?: ChartPayload;
@@ -207,14 +196,49 @@ const dashboardSearchUrl = (path: string, search?: unknown) => {
 |--------------------------------------------------------------------------
 */
 
-function AlertLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+function AlertLink({
+    href,
+    label,
+    children,
+    as,
+    onClick,
+}: {
+    href?: string;
+    label: string;
+    children: ReactNode;
+    as?: 'button';
+    onClick?: () => void;
+}) {
+    const className = "flex items-center justify-between gap-4 w-full rounded-lg border border-transparent px-3 py-2 text-muted-foreground transition-all duration-150 hover:border-white/10 hover:bg-white/5 active:scale-[0.99] active:opacity-80 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20";
+    const left = (
+        <span className="flex-1 text-left">
+            {label}
+        </span>
+    );
+
+    const right = (
+        <span className="flex-shrink-0 text-right">
+            {children}
+        </span>
+    );
+
+    if (as === 'button') {
+        return (
+            <button
+                type="button"
+                onClick={onClick}
+                className={className}
+            >
+                {left}
+                {right}
+            </button>
+        );
+    }
+
     return (
-        <Link
-            href={href}
-            className="flex items-center justify-between gap-4 rounded-lg border border-transparent px-3 py-2 text-muted-foreground transition hover:border-white/10 hover:bg-white/5"
-        >
-            <span>{label}</span>
-            <span className="text-right">{children}</span>
+        <Link href={href ?? '#'} className={className}>
+            {left}
+            {right}
         </Link>
     );
 }
@@ -298,8 +322,31 @@ export default function Dashboard() {
     const predictive = realtime?.predictive;
     const inventory = realtime?.inventory_risk as any;
 
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<any>(null);
+    const [openTrend, setOpenTrend] = useState(false);
+    const [openRestockModal, setOpenRestockModal] = useState(false);
 
+    const [modal, setModal] = useState({
+        type: null,
+        data: null
+    });
 
+    const openSalesInsight = async () => {
+        setOpen(true);
+        setLoading(true);
+
+        try {
+            const res = await axios.get('/api/insights/sales-drop');
+            setData(res.data);
+        } catch (err) {
+            console.error(err);
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -669,26 +716,38 @@ export default function Dashboard() {
                         </div>
 
                         <div className="space-y-2 text-sm">
-
-                            <AlertLink href="/sales" label="Sales status">
-                                <span
-                                    className={
-                                        salesInsight?.status === 'warning'
-                                            ? 'text-red-400'
-                                            : 'text-green-400'
-                                    }
-                                >
+                            <AlertLink
+                                as="button"
+                                label="Sales status"
+                                onClick={openSalesInsight}
+                            >
+                                <span className={salesInsight?.status === 'warning' ? 'text-red-400' : 'text-green-400'}>
                                     {salesInsight?.status ?? 'stable'} ({salesInsight?.drop_percent ?? 0}% drop)
                                 </span>
                             </AlertLink>
 
-                            <AlertLink href="/sales" label="Insight">
+                            <SalesInsightModal
+                                open={open}
+                                onClose={() => setOpen(false)}
+                                loading={loading}
+                                data={data}
+                            />
+
+                            <AlertLink
+                                as="button"
+                                label="Insight"
+                                onClick={openSalesInsight}
+                            >
                                 <span className="text-cyan-300">
                                     {salesInsight?.insights?.[0] ?? 'No insight'}
                                 </span>
                             </AlertLink>
 
-                            <AlertLink href="/sales" label="Trend">
+                            <AlertLink
+                                as="button"
+                                label="Trend"
+                                onClick={() => setOpenTrend(true)}
+                            >
                                 <span
                                     className={
                                         (predictive?.trend_per_day ?? 0) < 0
@@ -699,6 +758,13 @@ export default function Dashboard() {
                                     {predictive?.insight ?? 'No trend'}
                                 </span>
                             </AlertLink>
+
+                            <SalesForecastModal
+                                open={openTrend}
+                                onClose={() => setOpenTrend(false)}
+                                predictive={predictive}
+                                formatPHP={formatPHP}
+                            />
                             {/* Fraud Risk */}
                             {/* <AlertLink href="/sales?search=discount" label="Fraud risk">
                                 <span
@@ -731,11 +797,28 @@ export default function Dashboard() {
                                 </span>
                             </AlertLink>
 
-                            <AlertLink href={aiLayer?.recommendation?.toLowerCase().includes('restock') ? dashboardSearchUrl('/products', inventory?.critical_product) : '/sales'} label="AI Recommendation">
+                            {/* <AlertLink href={aiLayer?.recommendation?.toLowerCase().includes('restock') ? dashboardSearchUrl('/products', inventory?.critical_product) : '/sales'} label="AI Recommendation">
+                                <span className="text-indigo-300">
+                                    {aiLayer?.recommendation ?? 'System stable'}
+                                </span>
+                            </AlertLink> */}
+
+                            <AlertLink
+                                as="button"
+                                onClick={() => setOpenRestockModal(true)}
+                                label="AI Recommendation"
+                            >
                                 <span className="text-indigo-300">
                                     {aiLayer?.recommendation ?? 'System stable'}
                                 </span>
                             </AlertLink>
+
+                            <RestockRecommendationModal
+                                open={openRestockModal}
+                                onClose={() => setOpenRestockModal(false)}
+                                products={ai?.realtime?.low_stock_products ?? []}
+                            />
+
 
                         </div>
                     </div>
@@ -787,82 +870,6 @@ export default function Dashboard() {
                 </div>
 
                 {/* CHARTS */}
-                {/* <div className="grid gap-4 xl:grid-cols-2">
-
-                    <div className="rounded-xl border bg-white/5 p-4 shadow-sm">
-
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <BarChart3 className="h-5 w-5 text-green-400" />
-                                <h3 className="text-sm font-semibold">
-                                    Performance Overview
-                                </h3>
-                            </div>
-
-                            <span className="text-xs text-muted-foreground">
-                                Daily sales
-                            </span>
-                        </div>
-
-                        <div className="h-[280px] sm:h-[320px]">
-                            <Line
-                                data={performanceChart}
-                                options={chartOptions}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="rounded-xl border bg-white/5 p-4 shadow-sm">
-
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-cyan-400" />
-                                <h3 className="text-sm font-semibold">
-                                    Monthly Forecast Trend
-                                </h3>
-                            </div>
-
-                            <span className="text-xs text-muted-foreground">
-                                Revenue trend
-                            </span>
-                        </div>
-
-                        <div className="h-[280px] sm:h-[320px]">
-                            <Line
-                                data={monthlyChart}
-                                options={chartOptions}
-                            />
-                        </div>
-
-                    </div>
-                </div> */}
-
-                {/* <div className="grid gap-4 xl:grid-cols-2">
-                    {charts &&
-                        Object.entries(charts).map(([key, chart]) => (
-                            <div key={key} className="rounded-xl border bg-white/5 p-4">
-                                <h3 className="mb-2 text-sm font-semibold">
-                                    {chart.title}
-                                </h3>
-
-                                <div className="h-[280px]">
-                                    <Line
-                                        data={{
-                                            labels: chart.labels,
-                                            datasets: chart.datasets.map((d: ChartDataset) => ({
-                                                ...d,
-                                                borderColor: (d as any).borderColor ?? '#22d3ee',
-                                                backgroundColor: (d as any).backgroundColor ?? 'rgba(34,211,238,0.1)',
-                                                fill: true,
-                                            }))
-                                        }}
-                                        options={chartOptions}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                </div> */}
-
                 <div className="grid gap-4 xl:grid-cols-2">
                     {charts &&
                         Object.entries(charts).map(([key, chart]) => (
@@ -874,6 +881,6 @@ export default function Dashboard() {
                         ))}
                 </div>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }

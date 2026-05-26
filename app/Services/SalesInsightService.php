@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Services;
+
+use App\Models\Branch;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Product;
-use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
 
 class SalesInsightService
@@ -24,10 +25,6 @@ class SalesInsightService
         Branch performance check
                 ↓
         Customer activity check
-                ↓
-        Rule engine
-                ↓
-        AI explanation output
      */
 
     public function salesDrop()
@@ -86,9 +83,9 @@ class SalesInsightService
         */
 
         $branchPerformance = Sale::select(
-                'branch_id',
-                DB::raw('SUM(total_amount) as total')
-            )
+            'branch_id',
+            DB::raw('SUM(total_amount) as total')
+        )
             ->whereDate('transaction_date', now())
             ->groupBy('branch_id')
             ->get();
@@ -118,11 +115,11 @@ class SalesInsightService
         $insights = [];
 
         if ($dropPercent > 20) {
-            $insights[] = "Sales dropped by " . round($dropPercent, 2) . "% compared to yesterday.";
+            $insights[] = 'Sales dropped by '.round($dropPercent, 2).'% compared to yesterday.';
         }
 
         if ($lowStockImpact > 10) {
-            $insights[] = "Low stock products are affecting sales performance.";
+            $insights[] = 'Low stock products are affecting sales performance.';
         }
 
         if ($missingProducts->count() > 0) {
@@ -130,7 +127,7 @@ class SalesInsightService
         }
 
         if ($customerToday < $customerYesterday) {
-            $insights[] = "Customer traffic has decreased compared to yesterday.";
+            $insights[] = 'Customer traffic has decreased compared to yesterday.';
         }
 
         if ($lowBranch) {
@@ -146,10 +143,18 @@ class SalesInsightService
 
         $causes = [];
 
-        if ($lowStockImpact > 10) $causes[] = "inventory_shortage";
-        if ($missingProducts->count() > 0) $causes[] = "product_availability_issue";
-        if ($customerToday < $customerYesterday) $causes[] = "demand_drop";
-        if ($lowBranch) $causes[] = "branch_underperformance";
+        if ($lowStockImpact > 10) {
+            $causes[] = 'inventory_shortage';
+        }
+        if ($missingProducts->count() > 0) {
+            $causes[] = 'product_availability_issue';
+        }
+        if ($customerToday < $customerYesterday) {
+            $causes[] = 'demand_drop';
+        }
+        if ($lowBranch) {
+            $causes[] = 'branch_underperformance';
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -157,15 +162,58 @@ class SalesInsightService
         |--------------------------------------------------------------------------
         */
 
-        $recommendation = "Monitor sales trends closely.";
+        $recommendation = 'Monitor sales trends closely.';
 
-        if (in_array("inventory_shortage", $causes)) {
-            $recommendation = "Restock high-demand products immediately.";
+        if (in_array('inventory_shortage', $causes)) {
+            $recommendation = 'Restock high-demand products immediately.';
         }
 
-        if (in_array("branch_underperformance", $causes)) {
-            $recommendation = "Audit underperforming branches and staff activity.";
+        if (in_array('branch_underperformance', $causes)) {
+            $recommendation = 'Audit underperforming branches and staff activity.';
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 9. DROP DRIVER (DETAILED SALES THAT CAUSED DECLINE)
+        |--------------------------------------------------------------------------
+        */
+
+        // Top products yesterday vs today (with delta)
+        $productYesterday = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->select('sale_items.product_id', DB::raw('SUM(sale_items.quantity) as qty'))
+            ->whereDate('sales.transaction_date', now()->subDay())
+            ->groupBy('sale_items.product_id')
+            ->pluck('qty', 'product_id');
+
+        $productToday = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->select('sale_items.product_id', DB::raw('SUM(sale_items.quantity) as qty'))
+            ->whereDate('sales.transaction_date', now())
+            ->groupBy('sale_items.product_id')
+            ->pluck('qty', 'product_id');
+
+        $productDropDrivers = [];
+
+        foreach ($productYesterday as $productId => $yQty) {
+            $tQty = $productToday[$productId] ?? 0;
+
+            if ($yQty > 0) {
+                $dropPct = (($yQty - $tQty) / $yQty) * 100;
+
+                if ($dropPct > 20) {
+                    $productDropDrivers[] = [
+                        'product_id' => $productId,
+                        'product_name' => Product::find($productId)?->name,
+                        'yesterday_qty' => $yQty,
+                        'today_qty' => $tQty,
+                        'drop_qty' => $yQty - $tQty,
+                        'drop_percent' => round($dropPct, 2),
+                    ];
+                }
+            }
+        }
+
+        // sort biggest drop first
+        usort($productDropDrivers, fn ($a, $b) => $b['drop_qty'] <=> $a['drop_qty']);
 
         /*
         |--------------------------------------------------------------------------
@@ -179,6 +227,7 @@ class SalesInsightService
             'insights' => $insights,
             'root_causes' => $causes,
             'recommendation' => $recommendation,
+            'drop_drivers' => $productDropDrivers,
         ]);
     }
 }

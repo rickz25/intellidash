@@ -1,21 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Api\{
-    AuthController,
-    BranchController,
-    CategoryController,
-    ProductController,
-    SaleController,
-    SaleItemController,
-    UploadedReportController,
-    AiLogController,
-    NotificationController,
-    DashboardController,
-    DashboardV2Controller,
-    FraudLogController
-};
 
 Route::get('/', function () {
     return Inertia::render('welcome');

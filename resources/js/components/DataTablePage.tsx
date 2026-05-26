@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search } from 'lucide-react';
@@ -52,6 +52,59 @@ export default function DataTablePage({
         );
     }, [items, search]);
 
+    // Sorting state
+    const [sortKey, setSortKey] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+    const handleSort = (key: string) => {
+        if (sortKey === key) {
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            setSortDirection('asc');
+        }
+    };
+
+    const displayed = useMemo(() => {
+        const term = search.toLowerCase();
+
+        // 1. filter
+        let data = items;
+
+        if (term) {
+            data = data.filter((item) =>
+                searchKeys.some((key) =>
+                    String(item[key] ?? '').toLowerCase().includes(term),
+                ),
+            );
+        }
+
+        // 2. sort
+        if (sortKey) {
+            data = [...data].sort((a, b) => {
+                const aVal = a[sortKey];
+                const bVal = b[sortKey];
+
+                if (aVal == null) return 1;
+                if (bVal == null) return -1;
+
+                // number sort
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return sortDirection === 'asc'
+                        ? aVal - bVal
+                        : bVal - aVal;
+                }
+
+                // string sort
+                return sortDirection === 'asc'
+                    ? String(aVal).localeCompare(String(bVal))
+                    : String(bVal).localeCompare(String(aVal));
+            });
+        }
+
+        return data;
+    }, [items, search, searchKeys, sortKey, sortDirection]);
+
     return (
         <div className="flex flex-col gap-6 p-6">
             <div>
@@ -76,7 +129,19 @@ export default function DataTablePage({
                 <TableHeader>
                     <TableRow>
                         {columns.map((c) => (
-                            <TableHead key={c.key}>{c.label}</TableHead>
+                            <TableHead
+                                key={c.key}
+                                onClick={() => handleSort(c.key)}
+                                className="cursor-pointer select-none"
+                            >
+                                {c.label}
+
+                                {sortKey === c.key && (
+                                    <span className="ml-1 text-xs">
+                                        {sortDirection === 'asc' ? '▲' : '▼'}
+                                    </span>
+                                )}
+                            </TableHead>
                         ))}
                     </TableRow>
                 </TableHeader>
@@ -89,7 +154,7 @@ export default function DataTablePage({
                             </TableCell>
                         </TableRow>
                     ) : (
-                        filtered.map((item, i) => (
+                        displayed.map((item, i) => (
                             <TableRow key={i}>
                                 {columns.map((c) => (
                                     <TableCell key={c.key}>
@@ -106,9 +171,15 @@ export default function DataTablePage({
 
             {paginated && pagination && (
                 <div className="flex items-center justify-between border-t pt-3">
-                    <p className="text-xs text-muted-foreground">
-                        Page {pagination.current_page} of {pagination.last_page}
-                    </p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                        <p>
+                            Total Records: {pagination.total}
+                        </p>
+
+                        <p>
+                            Page {pagination.current_page} of {pagination.last_page}
+                        </p>
+                    </div>
 
                     <div className="flex gap-2">
                         <Button

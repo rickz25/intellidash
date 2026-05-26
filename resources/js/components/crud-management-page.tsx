@@ -90,6 +90,18 @@ export default function CrudManagementPage({
     paginated = false,
     perPage = 10,
 }: CrudManagementPageProps) {
+    // sorting state (not implemented in UI, but can be used for future enhancements)
+    const [sortKey, setSortKey] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const handleSort = (key: string) => {
+        if (sortKey === key) {
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            setSortDirection('asc');
+        }
+    };
+
     const [items, setItems] = useState<CrudRecord[]>([]);
     const [form, setForm] = useState<Record<string, CrudValue>>(emptyForm);
     const [editingItem, setEditingItem] = useState<CrudRecord | null>(null);
@@ -114,7 +126,7 @@ export default function CrudManagementPage({
             setError(null);
 
             const response = await axios.get<CrudRecord[] | PaginatedResponse>(
-                buildListUrl(endpoint, paginated, targetPage, perPage),
+                buildListUrl(endpoint, paginated, targetPage, perPage, sortKey, sortDirection),
                 { timeout: 10000 },
             );
 
@@ -160,19 +172,45 @@ export default function CrudManagementPage({
         loadLookups().catch((err) => setError(getErrorMessage(err, 'Unable to load form options.')));
     }, []);
 
-    const filteredItems = useMemo(() => {
-        const term = search.trim().toLowerCase();
+    const displayedItems = useMemo(() => {
+    const term = search.trim().toLowerCase();
 
-        if (!term) return items;
+    // 1. filter first
+    let data = items;
 
-        return items.filter((item) =>
+    if (term) {
+        data = data.filter((item) =>
             searchKeys
                 .map((key) => String(getNestedValue(item, key) ?? ''))
                 .join(' ')
                 .toLowerCase()
                 .includes(term),
         );
-    }, [items, search, searchKeys]);
+    }
+
+    // 2. sort next
+    if (sortKey) {
+        data = [...data].sort((a, b) => {
+            const aValue = getNestedValue(a, sortKey);
+            const bValue = getNestedValue(b, sortKey);
+
+            if (aValue == null) return 1;
+            if (bValue == null) return -1;
+
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return sortDirection === 'asc'
+                    ? aValue - bValue
+                    : bValue - aValue;
+            }
+
+            return sortDirection === 'asc'
+                ? String(aValue).localeCompare(String(bValue))
+                : String(bValue).localeCompare(String(aValue));
+        });
+    }
+
+    return data;
+}, [items, search, searchKeys, sortKey, sortDirection]);
 
     const resetForm = () => {
         setEditingItem(null);
@@ -271,8 +309,8 @@ export default function CrudManagementPage({
                         <div>
                             <h2 className="text-sm font-semibold">Directory</h2>
                             <p className="text-xs text-muted-foreground">
-                                {pagination ? `${pagination.from ?? 0}-${pagination.to ?? 0} of ${pagination.total} records` : `${filteredItems.length} of ${items.length} records shown`}
-                            </p>
+                                    {pagination ? `${pagination.from ?? 0}-${pagination.to ?? 0} of ${pagination.total} records` : `${displayedItems.length} of ${items.length} records shown`}
+                                </p>
                         </div>
 
                         <div className="relative sm:w-80">
@@ -285,16 +323,29 @@ export default function CrudManagementPage({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    {columns.map((column) => <TableHead key={column.key}>{column.label}</TableHead>)}
+                                    {columns.map((column) => (
+                                        <TableHead
+                                            key={column.key}
+                                            onClick={() => handleSort(column.key)}
+                                            className="cursor-pointer select-none"
+                                        >
+                                            {column.label}
+                                            {sortKey === column.key && (
+                                                <span className="ml-1 text-xs">
+                                                    {sortDirection === 'asc' ? '▲' : '▼'}
+                                                </span>
+                                            )}
+                                        </TableHead>
+                                    ))}
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow><TableCell colSpan={columns.length + 1} className="h-32 text-center text-muted-foreground">Loading records...</TableCell></TableRow>
-                                ) : filteredItems.length === 0 ? (
+                                ) : displayedItems.length === 0 ? (
                                     <TableRow><TableCell colSpan={columns.length + 1} className="h-32 text-center text-muted-foreground">No records found.</TableCell></TableRow>
-                                ) : filteredItems.map((item) => (
+                                ) : displayedItems.map((item) => (
                                     <TableRow key={item.id}>
                                         {columns.map((column) => (
                                             <TableCell key={column.key}>{column.render ? column.render(item) : String(getNestedValue(item, column.key) ?? '')}</TableCell>
@@ -400,12 +451,18 @@ function FormField({ field, value, error, options, onChange }: { field: FieldCon
     );
 }
 
-function buildListUrl(endpoint: string, paginated: boolean, page: number, perPage: number) {
+function buildListUrl(endpoint: string, paginated: boolean, page: number, perPage: number, sortKey: string | null, sortDirection: string | null) {
     if (!paginated) return endpoint;
 
     const separator = endpoint.includes('?') ? '&' : '?';
 
-    return `${endpoint}${separator}page=${page}&per_page=${perPage}`;
+    let url = `${endpoint}${separator}page=${page}&per_page=${perPage}`;
+
+    if (sortKey && sortDirection) {
+        url += `&sort=${sortKey}&direction=${sortDirection}`;
+    }
+
+    return url;
 }
 
 function buildResourceUrl(endpoint: string, id?: number) {

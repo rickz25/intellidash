@@ -10,72 +10,50 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    // public function index(Request $request): JsonResponse
-    // {
-    //     if ($request->boolean('lookup')) {
-    //         return response()->json(
-    //             Product::query()
-    //                 ->select(['id', 'name', 'sku', 'price'])
-    //                 ->where('status', true)
-    //                 ->orderBy('name')
-    //                 ->limit(1000)
-    //                 ->get()
-    //         );
-    //     }
-
-    //     $limit = min((int) $request->integer('limit', 500), 1000);
-
-    //     return response()->json(
-    //         Product::query()
-    //             ->with(['branch:id,name', 'category:id,name'])
-    //             ->latest()
-    //             ->limit($limit)
-    //             ->get()
-    //     );
-    // }
-
     public function index(Request $request): JsonResponse
     {
-        if ($request->boolean('lookup')) {
-            return response()->json(
-                Product::query()
-                    ->select(['id', 'name', 'sku', 'price'])
-                    ->where('status', true)
-                    ->orderBy('name')
-                    ->limit(1000)
-                    ->get()
-            );
-        }
-
         $perPage = min((int) $request->integer('per_page', 10), 100);
 
         $query = Product::query()
             ->with(['branch:id,name', 'category:id,name']);
 
-         // ✅ RISK FILTER
+        // ✅ LOOKUP
+        if ($request->boolean('lookup')) {
+            $query->select(['id', 'name', 'sku', 'price'])
+                ->where('status', true);
+        }
+
+        // ✅ RISK FILTER
         if ($request->filled('risk')) {
-            if ($request->risk === 'high_risk') {
-                $query->whereColumn('stock_quantity', '<=', 'reorder_level');
-            }
 
-            if ($request->risk === 'low_stock') {
-                $query->where('stock_quantity', '<', 10);
-            }
+            match ($request->risk) {
+                'high_risk' => $query->whereColumn('stock_quantity', '<=', 'reorder_level'),
+                // $query->orderBy('stock_quantity', 'asc'),
 
-            if ($request->risk === 'out_of_stock') {
-                $query->where('stock_quantity', '=', 0);
-            }
+                'low_stock' => $query->where('stock_quantity', '<', 10),
+
+                'out_of_stock' => $query->where('stock_quantity', 0),
+
+                default => null,
+            };
         }
 
-        // ✅ NAME FILTER
+        // ✅ PRODUCT NAME FILTER
         if ($request->filled('product_name')) {
-            $query->where('name', 'like', "%{$request->product_name}%");
+            $query->where('name', '=', trim($request->product_name));
         }
 
-            return response()->json(
-                $query->latest()->paginate($perPage)
-            );
+        // ✅ STOCK SORT
+        if ($request->filled('stock')) {
+            $query->orderBy('stock_quantity', 'desc');
+        } else {
+            $query->latest();
         }
+
+        return response()->json(
+            $query->paginate($perPage)
+        );
+    }
 
     public function store(Request $request): JsonResponse
     {

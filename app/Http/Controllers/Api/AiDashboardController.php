@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\ChartService;
 use App\Services\FraudService;
 use App\Services\PredictiveService;
@@ -21,6 +22,11 @@ class AiDashboardController extends Controller
         $predictive = $this->safeData(app(PredictiveService::class)->salesForecast());
         $inventoryRisk = $this->getInventoryRisk($v2);
         $charts = app(ChartService::class)->dashboardCharts();
+        $lowStockProducts = Product::whereColumn('stock_quantity', '<=', 'reorder_level')
+            ->select('id', 'name', 'stock_quantity', 'reorder_level')
+            ->orderByRaw('(reorder_level - stock_quantity) DESC')
+            ->limit(20)
+            ->get();
 
         return response()->json([
             'realtime' => [
@@ -32,7 +38,12 @@ class AiDashboardController extends Controller
                 'sales_insight' => $salesInsight,
                 'predictive' => $predictive,
                 'inventory_risk' => $inventoryRisk,
-
+                'low_stock_products' => $lowStockProducts->map(fn ($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'stock_quantity' => $p->stock_quantity,
+                    'reorder_level' => $p->reorder_level,
+                ]),
                 'trends' => $v2['trends'] ?? [],
             ],
 
@@ -143,86 +154,86 @@ class AiDashboardController extends Controller
     }
 }
 
-    // public function index()
-    // {
-    //     // call V2
-    //     $v2 = app(DashboardV2Controller::class)->index()->getData(true);
+// public function index()
+// {
+//     // call V2
+//     $v2 = app(DashboardV2Controller::class)->index()->getData(true);
 
-    //     // call V3
-    //     $v3 = app(DashboardV3Controller::class)->index()->getData(true);
+//     // call V3
+//     $v3 = app(DashboardV3Controller::class)->index()->getData(true);
 
-    //     return response()->json([
-    //         'realtime' => $v2,
-    //         'executive' => $v3,
+//     return response()->json([
+//         'realtime' => $v2,
+//         'executive' => $v3,
 
-    //         // 🔥 AI LAYER (computed merge logic)
-    //         'ai_layer' => [
-    //             'status' => $this->getMarketStatus($v2, $v3),
-    //             'risk_level' => $this->getRiskLevel($v2, $v3),
-    //             'recommendation' => $this->getRecommendation($v2, $v3),
-    //         ],
-    //     ]);
-    // }
+//         // 🔥 AI LAYER (computed merge logic)
+//         'ai_layer' => [
+//             'status' => $this->getMarketStatus($v2, $v3),
+//             'risk_level' => $this->getRiskLevel($v2, $v3),
+//             'recommendation' => $this->getRecommendation($v2, $v3),
+//         ],
+//     ]);
+// }
 
-    // private function getMarketStatus($v2, $v3)
-    // {
-    //     $salesDrop = $v2['sales_insight']['drop_percent'] ?? 0;
+// private function getMarketStatus($v2, $v3)
+// {
+//     $salesDrop = $v2['sales_insight']['drop_percent'] ?? 0;
 
-    //     return $salesDrop > 10 ? 'warning' : 'healthy';
-    // }
+//     return $salesDrop > 10 ? 'warning' : 'healthy';
+// }
 
-    // private function getRiskLevel($v2, $v3)
-    // {
-    //     $fraud = $v2['fraud']['risk_score'] ?? 0;
+// private function getRiskLevel($v2, $v3)
+// {
+//     $fraud = $v2['fraud']['risk_score'] ?? 0;
 
-    //     if ($fraud > 70) return 'HIGH';
-    //     if ($fraud > 40) return 'MEDIUM';
+//     if ($fraud > 70) return 'HIGH';
+//     if ($fraud > 40) return 'MEDIUM';
 
-    //     return 'LOW';
-    // }
+//     return 'LOW';
+// }
 
-    // private function getRecommendation($v2, $v3)
-    // {
-    //     if (($v3['profit_margin'] ?? 0) < 20) {
-    //         return 'Improve pricing strategy';
-    //     }
+// private function getRecommendation($v2, $v3)
+// {
+//     if (($v3['profit_margin'] ?? 0) < 20) {
+//         return 'Improve pricing strategy';
+//     }
 
-    //     if (($v2['inventory_risk']['high_risk_count'] ?? 0) > 0) {
-    //         return 'Restock critical products';
-    //     }
+//     if (($v2['inventory_risk']['high_risk_count'] ?? 0) > 0) {
+//         return 'Restock critical products';
+//     }
 
-    //     return 'System stable';
-    // }
+//     return 'System stable';
+// }
 // ---------------------------------------------------------------------
-        // public function insights()
-    // {
-    //     $todaySales = Sale::whereDate('transaction_date', now())
-    //         ->sum('total_amount');
+// public function insights()
+// {
+//     $todaySales = Sale::whereDate('transaction_date', now())
+//         ->sum('total_amount');
 
-    //     $yesterdaySales = Sale::whereDate('transaction_date', now()->subDay())
-    //         ->sum('total_amount');
+//     $yesterdaySales = Sale::whereDate('transaction_date', now()->subDay())
+//         ->sum('total_amount');
 
-    //     $change = $yesterdaySales > 0
-    //         ? (($todaySales - $yesterdaySales) / $yesterdaySales) * 100
-    //         : 0;
+//     $change = $yesterdaySales > 0
+//         ? (($todaySales - $yesterdaySales) / $yesterdaySales) * 100
+//         : 0;
 
-    //     $insight = "Sales are stable";
+//     $insight = "Sales are stable";
 
-    //     if ($change < -20) {
-    //         $insight = "Sales dropped significantly today. Possible demand issue or stock shortage.";
-    //     }
+//     if ($change < -20) {
+//         $insight = "Sales dropped significantly today. Possible demand issue or stock shortage.";
+//     }
 
-    //     if ($change > 20) {
-    //         $insight = "Strong sales growth detected. Promotion or demand spike.";
-    //     }
+//     if ($change > 20) {
+//         $insight = "Strong sales growth detected. Promotion or demand spike.";
+//     }
 
-    //     return response()->json([
-    //         'today_sales' => $todaySales,
-    //         'yesterday_sales' => $yesterdaySales,
-    //         'change_percent' => round($change, 2),
-    //         'insight' => $insight,
-    //     ]);
-    // }
+//     return response()->json([
+//         'today_sales' => $todaySales,
+//         'yesterday_sales' => $yesterdaySales,
+//         'change_percent' => round($change, 2),
+//         'insight' => $insight,
+//     ]);
+// }
 // Forecasting (Simple Version)
 
 //     $trend = Sale::selectRaw('MONTH(transaction_date) as m, SUM(total_amount) as t')

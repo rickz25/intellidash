@@ -1,30 +1,22 @@
 <?php
 
+use App\Http\Controllers\Api\AiDashboardController;
+use App\Http\Controllers\Api\AiLogController;
+use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DashboardV2Controller;
+use App\Http\Controllers\Api\DashboardV3Controller;
+use App\Http\Controllers\Api\FraudLogController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\SaleItemController;
+use App\Http\Controllers\Api\UploadedReportController;
+use App\Services\PredictiveService;
+use App\Services\SalesInsightService;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Api\{
-    BranchController,
-    CategoryController,
-    ProductController,
-    SaleController,
-    SaleItemController,
-    UploadedReportController,
-    AiLogController,
-    NotificationController,
-    RoleController,
-    AiDashboardController,
-    DashboardController,
-    DashboardV2Controller,
-    DashboardV3Controller,
-    FraudLogController
-};
-
-use App\Http\Controllers\Api\Ai\{
-    SalesInsightController,
-    ChartController,
-    FraudDetectionController,
-    PredictiveController
-};
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +32,7 @@ use App\Http\Controllers\Api\Ai\{
 
 Route::get('/health', function () {
     return response()->json([
-        'status' => 'ok'
+        'status' => 'ok',
     ]);
 });
 
@@ -54,19 +46,6 @@ Route::get('/health', function () {
 //     Route::post('/logout', [AuthController::class, 'logout']);
 //     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
 // });
-
-Route::middleware(['auth:sanctum', 'role:Admin'])
-    ->get('/ai/sales-drop', [SalesInsightController::class, 'salesDrop']);
-Route::middleware(['auth:sanctum'])
-->post('/ai/chart', [ChartController::class, 'generate']);
-Route::middleware(['auth:sanctum', 'role:Admin'])
-    ->get('/ai/fraud-check', [FraudDetectionController::class, 'analyze']);
-
-Route::middleware(['auth:sanctum'])
-    ->get('/ai/forecast/sales', [PredictiveController::class, 'salesForecast']);
-
-Route::middleware(['auth:sanctum'])
-    ->get('/ai/forecast/inventory', [PredictiveController::class, 'inventoryForecast']);
 
 /*
 |--------------------------------------------------------------------------
@@ -91,7 +70,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dashboard/ai/actions/forecast', [AiDashboardController::class, 'runForecast']);
     Route::post('/dashboard/ai/actions/fraud', [AiDashboardController::class, 'detectFraud']);
     Route::post('/dashboard/ai/actions/inventory', [AiDashboardController::class, 'optimizeInventory']);
-
+    Route::get('/insights/sales-drop', [SalesInsightService::class, 'salesDrop']);
+    Route::get('/insights/sales-forecast', [PredictiveService::class, 'salesForecast']);
 
     /*
     |--------------------------------------------------------------------------

@@ -276,8 +276,6 @@ Developed by Ricky Morales.
 
 # GitHub Repository
 
-Replace this with your actual repository URL:
-
 ```txt
 https://github.com/rickz25/IntelliDash
 ```

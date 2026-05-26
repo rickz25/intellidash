@@ -2,14 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Role;
-use App\Models\User;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DemoDataSeeder extends Seeder
@@ -28,7 +30,7 @@ class DemoDataSeeder extends Seeder
             ['name' => 'Analyst'],
             ['name' => 'Inventory'],
         ])->map(fn ($r) => Role::updateOrCreate($r, [
-            'permissions' => ['*']
+            'permissions' => ['*'],
         ]));
 
         /*
@@ -41,8 +43,8 @@ class DemoDataSeeder extends Seeder
                 'branch_code' => "BR-00$i",
                 'name' => "Branch $i",
                 'address' => "Street $i, Manila",
-                'city' => "Manila",
-                'contact_number' => '09' . rand(100000000, 999999999),
+                'city' => 'Manila',
+                'contact_number' => '09'.rand(100000000, 999999999),
                 'email' => "branch$i@test.com",
                 'manager_name' => "Manager $i",
                 'status' => 1,
@@ -116,7 +118,7 @@ class DemoDataSeeder extends Seeder
 
             return Sale::create([
                 'branch_id' => $branches->random()->id,
-                'invoice_no' => "INV-" . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'invoice_no' => 'INV-'.str_pad($i, 6, '0', STR_PAD_LEFT),
                 'customer_name' => "Customer $i",
                 'transaction_date' => now()->subDays(rand(0, 30)),
                 'subtotal' => $subtotal,
@@ -146,5 +148,72 @@ class DemoDataSeeder extends Seeder
                 'total' => $product->price * rand(1, 5),
             ]);
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 8. UPLOADED REPORTS (4)
+        |--------------------------------------------------------------------------
+        */
+        DB::table('uploaded_reports')->insert([
+            [
+                'uploaded_by' => 1,
+                'file_name' => 'hourly_report_may.xlsx',
+                'file_path' => 'uploads/reports/hourly_report_may.xlsx',
+                'report_type' => 'Hourly Report',
+                'total_rows' => 1500,
+                'processed_rows' => 1490,
+                'failed_rows' => 10,
+                'status' => 'completed',
+                'remarks' => 'Successfully uploaded and processed.',
+                'uploaded_at' => Carbon::now()->subDays(5),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            [
+                'uploaded_by' => 1,
+                'file_name' => 'merchant_list.csv',
+                'file_path' => 'uploads/reports/merchant_list.csv',
+                'report_type' => 'Merchant Maintenance',
+                'total_rows' => 800,
+                'processed_rows' => 800,
+                'failed_rows' => 0,
+                'status' => 'completed',
+                'remarks' => 'All merchant records imported successfully.',
+                'uploaded_at' => Carbon::now()->subDays(3),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            [
+                'uploaded_by' => 2,
+                'file_name' => 'fraud_transactions.xlsx',
+                'file_path' => 'uploads/reports/fraud_transactions.xlsx',
+                'report_type' => 'Fraud Monitoring',
+                'total_rows' => 2500,
+                'processed_rows' => 2100,
+                'failed_rows' => 400,
+                'status' => 'failed',
+                'remarks' => 'Some rows failed validation during import.',
+                'uploaded_at' => Carbon::now()->subDay(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            [
+                'uploaded_by' => 2,
+                'file_name' => 'daily_sales_report.xlsx',
+                'file_path' => 'uploads/reports/daily_sales_report.xlsx',
+                'report_type' => 'Sales Report',
+                'total_rows' => 1200,
+                'processed_rows' => 600,
+                'failed_rows' => 0,
+                'status' => 'processing',
+                'remarks' => 'Import is currently in progress.',
+                'uploaded_at' => Carbon::now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }

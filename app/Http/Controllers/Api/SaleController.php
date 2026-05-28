@@ -13,14 +13,44 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = min((int) $request->integer('per_page', 10), 100);
+        $search = trim((string) $request->query('search', ''));
+
+        $query = Sale::query()
+            ->select([
+                'id',
+                'branch_id',
+                'invoice_no',
+                'customer_name',
+                'transaction_date',
+                'subtotal',
+                'tax',
+                'discount',
+                'total_amount',
+                'payment_method',
+                'status',
+                'created_by',
+                'created_at',
+                'updated_at',
+            ])
+            ->with(['branch:id,name', 'user:id,name'])
+            ->withCount('items')
+            ->latest();
+
+        if ($search !== '') {
+            $query->where(function ($query) use ($search) {
+                $query
+                    ->where('invoice_no', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('payment_method', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('branch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         return response()->json(
-            Sale::query()
-                ->select(['id', 'invoice_no', 'transaction_date', 'total_amount', 'status', 'created_at'])
-                ->with(['branch:id,name', 'user:id,name'])
-                ->withCount('items')
-                ->latest()
-                ->paginate($perPage)
+            $query->paginate($perPage)
         );
     }
 

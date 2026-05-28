@@ -83,9 +83,16 @@ interface PredictiveData {
     insight: string;
 }
 
+interface InventoryProduct {
+    id: number;
+    name: string;
+    stock_quantity: number;
+    reorder_level: number;
+}
+
 interface InventoryRisk {
     high_risk_count: number;
-    critical_product: string | null;
+    critical_product: InventoryProduct | null;
 }
 
 interface MonthlyTrend {
@@ -99,7 +106,7 @@ interface DailySales {
 }
 
 interface RealtimeData {
-    low_stock_products: never[];
+    low_stock_products: InventoryProduct[];
     revenue: number;
     sales: number;
     inventory: number;
@@ -153,6 +160,15 @@ interface DashboardCharts {
     fraud_risk_trend?: ChartPayload;
     sales_by_category?: ChartPayload;
 }
+type DashboardChartKey = keyof DashboardCharts;
+
+interface DashboardChartConfig {
+    key: DashboardChartKey;
+    icon: ReactNode;
+    className?: string;
+    footer?: ReactNode;
+}
+
 interface AiLayer {
     status: string;
     risk_level: string;
@@ -276,14 +292,49 @@ export default function Dashboard() {
         }
     };
 
-    const chartIcons: Record<string, ReactNode> = {
-        sales_trend: <TrendingUp className="h-5 w-5 text-cyan-400" />,
-        revenue_by_branch: <BarChart3 className="h-5 w-5 text-green-400" />,
-        top_products: <BarChart3 className="h-5 w-5 text-indigo-400" />,
-        low_stock_products: <BarChart3 className="h-5 w-5 text-red-400" />,
-        payment_methods: <PieChart className="h-5 w-5 text-yellow-400" />,
-        sales_by_category: <PieChart className="h-5 w-5 text-purple-400" />,
-    };
+    const dashboardChartRegistry: DashboardChartConfig[] = [
+        {
+            key: 'sales_trend',
+            icon: <TrendingUp className="h-5 w-5 text-cyan-400" />,
+            className: 'xl:col-span-2',
+            footer: <Link href="/sales" className="hover:text-cyan-300">Open sales transactions</Link>,
+        },
+        {
+            key: 'revenue_by_branch',
+            icon: <BarChart3 className="h-5 w-5 text-green-400" />,
+            footer: <Link href="/branches" className="hover:text-green-300">Review branch records</Link>,
+        },
+        {
+            key: 'monthly_revenue',
+            icon: <TrendingUp className="h-5 w-5 text-emerald-400" />,
+            footer: <Link href="/sales" className="hover:text-emerald-300">Inspect monthly sales</Link>,
+        },
+        {
+            key: 'top_products',
+            icon: <BarChart3 className="h-5 w-5 text-indigo-400" />,
+            footer: <Link href="/products" className="hover:text-indigo-300">Open product catalog</Link>,
+        },
+        {
+            key: 'low_stock_products',
+            icon: <Boxes className="h-5 w-5 text-red-400" />,
+            footer: <Link href="/products?risk=high_risk" className="hover:text-red-300">View high-risk inventory</Link>,
+        },
+        {
+            key: 'payment_methods',
+            icon: <PieChart className="h-5 w-5 text-yellow-400" />,
+            footer: <Link href="/sales" className="hover:text-yellow-300">Audit payment mix</Link>,
+        },
+        {
+            key: 'fraud_risk_trend',
+            icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
+            footer: <Link href="/fraud-logs" className="hover:text-red-300">Open fraud logs</Link>,
+        },
+        {
+            key: 'sales_by_category',
+            icon: <PieChart className="h-5 w-5 text-purple-400" />,
+            footer: <Link href="/categories" className="hover:text-purple-300">Review categories</Link>,
+        },
+    ];
 
     /*
     |--------------------------------------------------------------------------
@@ -870,15 +921,39 @@ export default function Dashboard() {
                 </div>
 
                 {/* CHARTS */}
-                <div className="grid gap-4 xl:grid-cols-2">
-                    {charts &&
-                        Object.entries(charts).map(([key, chart]) => (
-                            <ChartCard
-                                key={key}
-                                chart={chart}
-                                icon={chartIcons[key] ?? null}
-                            />
-                        ))}
+                <div className="space-y-3">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 className="text-base font-semibold">
+                                Business Analytics
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                Sales, inventory, branch, payment, fraud, and category performance from ChartService.
+                            </p>
+                        </div>
+
+                        <span className="text-xs text-muted-foreground">
+                            {charts ? String(Object.keys(charts).length) + ' charts available' : 'No chart data'}
+                        </span>
+                    </div>
+
+                    <div className="grid gap-4 xl:grid-cols-2">
+                        {dashboardChartRegistry.map((config) => {
+                            const chart = charts?.[config.key];
+
+                            if (!chart) return null;
+
+                            return (
+                                <div key={config.key} className={config.className}>
+                                    <ChartCard
+                                        chart={chart}
+                                        icon={config.icon}
+                                        footer={config.footer}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </AppLayout >

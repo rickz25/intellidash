@@ -85,7 +85,7 @@ Example:
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/intellidash-ai-erp.git
+git clone https://github.com/rickz25/intellidash-ai-erp.git
 ```
 
 ## 2. Navigate to the Project

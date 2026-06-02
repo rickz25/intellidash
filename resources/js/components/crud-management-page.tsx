@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useMemo, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -120,7 +120,7 @@ export default function CrudManagementPage({
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState<PaginationMeta | null>(null);
 
-    const loadItems = async (targetPage = page) => {
+    const loadItems = useCallback(async (targetPage = page) => {
         try {
             setLoading(true);
             setError(null);
@@ -149,9 +149,17 @@ export default function CrudManagementPage({
         } finally {
             setLoading(false);
         }
-    };
+    }, [
+        page,
+        endpoint,
+        paginated,
+        perPage,
+        sortKey,
+        sortDirection,
+        entityName
+    ]);
 
-    const loadLookups = async () => {
+    const loadLookups = useCallback(async () => {
         const lookupFields = fields.filter((field) => field.lookup);
 
         await Promise.all(
@@ -159,18 +167,24 @@ export default function CrudManagementPage({
                 if (!field.lookup) return;
 
                 const response = await axios.get<CrudRecord[]>(field.lookup, { timeout: 10000 });
-                setLookups((current) => ({ ...current, [field.name]: response.data }));
+
+                setLookups((current) => ({
+                    ...current,
+                    [field.name]: response.data,
+                }));
             }),
         );
-    };
+    }, [fields]);
 
     useEffect(() => {
         loadItems(page);
-    }, [page]);
+    }, [page, loadItems]);
 
     useEffect(() => {
-        loadLookups().catch((err) => setError(getErrorMessage(err, 'Unable to load form options.')));
-    }, []);
+        loadLookups().catch((err) =>
+            setError(getErrorMessage(err, 'Unable to load form options.')),
+        );
+    }, [loadLookups]);
 
     const displayedItems = useMemo(() => {
         const term = search.trim().toLowerCase();

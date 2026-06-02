@@ -6,6 +6,14 @@ import { type BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Fraud Logs', href: '/fraud-logs' },
 ];
+interface FraudLog {
+    risk_score: number;
+    risk_level: string;
+    high_discount_alerts: number;
+    sales_spikes_count: number;
+    suspicious_cashiers_count: number;
+    meta: Record<string, unknown>;
+}
 
 export default function FraudLogsIndex() {
     return (
@@ -32,11 +40,15 @@ export default function FraudLogsIndex() {
                     {
                         key: 'meta',
                         label: 'Meta',
-                        render: (item: any) => (
-                            <pre className="max-h-40 overflow-auto whitespace-pre-wrap">
-                                {JSON.stringify(item.meta, null, 2)}
-                            </pre>
-                        ),
+                        render: (item: unknown) => {
+                            const fraudLog = item as { meta: Record<string, unknown> };
+
+                            return (
+                                <pre className="max-h-40 overflow-auto whitespace-pre-wrap">
+                                    {JSON.stringify(fraudLog.meta, null, 2)}
+                                </pre>
+                            );
+                        },
                     },
                 ]}
             />

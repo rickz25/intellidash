@@ -8,18 +8,21 @@ interface ModalProps {
 }
 
 export default function Modal({ open, onClose, title, children }: ModalProps) {
-    // close on ESC
     useEffect(() => {
+        if (!open) return;
+
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') {
+                onClose();
+            }
         };
 
-        if (open) {
-            window.addEventListener('keydown', handleEsc);
-        }
+        window.addEventListener('keydown', handleEsc);
 
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, [open]);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [open, onClose]);
 
     if (!open) return null;
 

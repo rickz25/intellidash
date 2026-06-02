@@ -85,13 +85,13 @@ Example:
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/rickz25/intellidash-ai-erp.git
+git clone https://github.com/rickz25/IntelliDash.git
 ```
 
 ## 2. Navigate to the Project
 
 ```bash
-cd intellidash-ai-erp
+cd IntelliDash
 ```
 
 ## 3. Install Backend Dependencies

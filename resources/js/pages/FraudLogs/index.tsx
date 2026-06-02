@@ -6,14 +6,6 @@ import { type BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Fraud Logs', href: '/fraud-logs' },
 ];
-interface FraudLog {
-    risk_score: number;
-    risk_level: string;
-    high_discount_alerts: number;
-    sales_spikes_count: number;
-    suspicious_cashiers_count: number;
-    meta: Record<string, unknown>;
-}
 
 export default function FraudLogsIndex() {
     return (

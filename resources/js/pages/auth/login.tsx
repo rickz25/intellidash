@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle, LockKeyhole, Mail } from 'lucide-react';
+import { LoaderCircle, Activity, LockKeyhole, Mail } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
@@ -48,15 +48,15 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     {/* Header */}
                     <div className="mb-8 text-center">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-lg">
-                            <LockKeyhole className="h-8 w-8 text-white" />
+                            <Activity className="h-8 w-8 text-white" />
                         </div>
 
                         <h1 className="text-3xl font-bold tracking-tight text-white">
-                            Welcome Back
+                            IntelliDash
                         </h1>
 
                         <p className="mt-2 text-sm text-slate-300">
-                            Sign in to continue to your dashboard
+                            AI-Powered Business Intelligence Dashboard
                         </p>
                     </div>
 
